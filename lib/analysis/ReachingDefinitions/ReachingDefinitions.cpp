@@ -363,22 +363,16 @@ SSAReachingDefinitionsAnalysis::getReachingDefinitions(RDNode *use) {
     return gatherNonPhisDefs(use->defuse);
 }
 
-std::vector<RDNode *>
-SSAReachingDefinitionsAnalysis::findAllReachingDefinitions(RDNode *from) {
-    DBG_SECTION_BEGIN(dda, "MemorySSA - finding all definitions");
-    assert(from->getBBlock() && "The node has no BBlock");
-
-    DefinitionsMap<RDNode> defs; // auxiliary map for finding defintions
+///
+// Get definitions that reach 'to' node that are in the same
+// block as is the 'to' node
+static std::set<RDNode *> getAllDefinitionsFromBlock(DefinitionsMap<RDNode>& defs,
+                                                     RDNode *to) {
     std::set<RDNode *> foundDefs; // definitions that we found
-
-    ///
-    // get the definitions from this block
-    // (this is basically the LVN)
-    ///
-    auto block = from->getBBlock();
+    auto block = to->getBBlock();
     for (auto node : block->getNodes()) {
-        // run only from the beginning of the block up to the node
-        if (node == from)
+        // run only form the beginning of the block up to the node
+        if (node == to)
             break;
 
         for (auto& ds : node->overwrites) {
@@ -403,9 +397,25 @@ SSAReachingDefinitionsAnalysis::findAllReachingDefinitions(RDNode *from) {
         }
     }
 
+    return foundDefs;
+}
+
+std::vector<RDNode *>
+SSAReachingDefinitionsAnalysis::findAllReachingDefinitions(RDNode *from) {
+    DBG_SECTION_BEGIN(dda, "MemorySSA - finding all definitions");
+    assert(from->getBBlock() && "The node has no BBlock");
+
+    DefinitionsMap<RDNode> defs; // auxiliary map for finding defintions
+    std::set<RDNode *> foundDefs; // definitions that we found
+
+    ///
+    // get the definitions from this block that reach 'from' node
+    foundDefs = getAllDefinitionsFromBlock(defs, from);
+
     ///
     // get the definitions from predecessors
     ///
+    auto block = from->getBBlock();
     std::set<RDBBlock *> visitedBlocks; // for terminating the search
     // NOTE: do not add block to visitedBlocks, it may be its own predecessor,
     // in which case we want to process it
