@@ -246,14 +246,6 @@ SSAReachingDefinitionsAnalysis::findDefinitionsInBlock(RDBBlock *block,
 void SSAReachingDefinitionsAnalysis::performLvn(RDBBlock *block) {
     // perform Lvn for one block
     for (RDNode *node : block->getNodes()) {
-        // strong update
-        for (auto& ds : node->overwrites) {
-            assert(!ds.offset.isUnknown() && "Update on unknown offset");
-            assert(!ds.target->isUnknown() && "Update on unknown memory");
-
-            block->definitions.update(ds, node);
-        }
-
         // weak update
         for (auto& ds : node->defs) {
             if (ds.target->isUnknown()) {
@@ -275,6 +267,14 @@ void SSAReachingDefinitionsAnalysis::performLvn(RDBBlock *block) {
             // NOTE: this must be after findDefinitionsInBlock, otherwise
             // also this definition will be found
             block->definitions.add(ds, node);
+        }
+
+        // strong update
+        for (auto& ds : node->overwrites) {
+            assert(!ds.offset.isUnknown() && "Update on unknown offset");
+            assert(!ds.target->isUnknown() && "Update on unknown memory");
+
+            block->definitions.update(ds, node);
         }
 
         // use
@@ -375,10 +375,6 @@ static std::set<RDNode *> getAllDefinitionsFromBlock(DefinitionsMap<RDNode>& def
         if (node == to)
             break;
 
-        for (auto& ds : node->overwrites) {
-            defs.update(ds, node);
-        }
-
         // weak update
         for (auto& ds : node->defs) {
             if (ds.target->isUnknown()) {
@@ -388,6 +384,10 @@ static std::set<RDNode *> getAllDefinitionsFromBlock(DefinitionsMap<RDNode>& def
             }
 
             defs.add(ds, node);
+        }
+
+        for (auto& ds : node->overwrites) {
+            defs.update(ds, node);
         }
     }
 
