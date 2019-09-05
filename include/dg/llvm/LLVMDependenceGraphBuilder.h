@@ -116,7 +116,7 @@ class LLVMDependenceGraphBuilder {
         if (_options.RDAOptions.isDataFlow()) {
             _RD->run<dg::analysis::rd::ReachingDefinitionsAnalysis>();
         } else if (_options.RDAOptions.isSSA()) {
-            _RD->run<dg::analysis::rd::SSAReachingDefinitionsAnalysis>();
+            _RD->run<dg::analysis::rd::MemorySSA>();
         } else {
             assert( false && "unknown RDA type" );
             abort();

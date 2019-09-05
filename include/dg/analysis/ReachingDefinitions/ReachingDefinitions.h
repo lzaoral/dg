@@ -260,7 +260,7 @@ public:
     virtual std::vector<RDNode *> getReachingDefinitions(RDNode *use);
 };
 
-class SSAReachingDefinitionsAnalysis : public ReachingDefinitionsAnalysis {
+class MemorySSA : public ReachingDefinitionsAnalysis {
     void performLvn();
     void performLvn(RDBBlock *block);
     void performGvn();
@@ -283,7 +283,8 @@ class SSAReachingDefinitionsAnalysis : public ReachingDefinitionsAnalysis {
     std::vector<RDNode *> findDefinitions(RDBBlock *, const DefSite&);
 
     /// Finding definitions for unknown memory
-    // Must be called after LVN proceeded - ideally only when the client is getting the definitions
+    // Must be called after LVN proceeded
+    // - ideally only when the client is getting the definitions
     std::vector<RDNode *> findAllReachingDefinitions(RDNode *from);
     void findAllReachingDefinitions(DefinitionsMap<RDNode>& defs, RDBBlock *from,
                                     std::set<RDNode *>& nodes,
@@ -293,11 +294,11 @@ class SSAReachingDefinitionsAnalysis : public ReachingDefinitionsAnalysis {
     std::vector<RDNode *> _phis;
 
 public:
-    SSAReachingDefinitionsAnalysis(ReachingDefinitionsGraph&& graph,
-                                   const ReachingDefinitionsAnalysisOptions& opts)
+    MemorySSA(ReachingDefinitionsGraph&& graph,
+              const ReachingDefinitionsAnalysisOptions& opts)
     : ReachingDefinitionsAnalysis(std::move(graph), opts) {}
 
-    SSAReachingDefinitionsAnalysis(ReachingDefinitionsGraph&& graph)
+    MemorySSA(ReachingDefinitionsGraph&& graph)
     : ReachingDefinitionsAnalysis(std::move(graph)) {}
 
     void run() override {

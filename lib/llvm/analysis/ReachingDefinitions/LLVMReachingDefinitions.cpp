@@ -32,8 +32,7 @@ void LLVMReachingDefinitions::initializeSparseRDA() {
     // let the compiler do copy-ellision
     auto graph = builder->build();
 
-    RDA = std::unique_ptr<ReachingDefinitionsAnalysis>(
-                    new SSAReachingDefinitionsAnalysis(std::move(graph)));
+    RDA = std::unique_ptr<ReachingDefinitionsAnalysis>(new MemorySSA(std::move(graph)));
 }
 
 void LLVMReachingDefinitions::initializeDenseRDA() {
