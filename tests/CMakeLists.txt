@@ -37,17 +37,10 @@ endmacro()
 # find compatible clang, lli, llvm-link and opt
 # --------------------------------------------------
 
-# clang binary uses only major version as suffix since 7.0
-if(${LLVM_PACKAGE_VERSION} VERSION_LESS "7.0")
-    set(CLANG_BINARY clang-${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR})
-else()
-    set(CLANG_BINARY clang-${LLVM_VERSION_MAJOR})
-endif()
-
 # REQUIRED available with CMake 3.18+
-find_program(LLVMCC ${CLANG_BINARY} HINTS ${LLVM_TOOLS_BINARY_DIR}
-                                    # do not use ccache
-                                    NO_SYSTEM_ENVIRONMENT_PATH)
+find_program(LLVMCC clang HINTS ${LLVM_TOOLS_BINARY_DIR}
+                                # do not use ccache
+                                NO_SYSTEM_ENVIRONMENT_PATH)
 if(NOT LLVMCC)
     message(FATAL_ERROR "Bitcode compiler: version compatible with \
                          LLVM ${LLVM_PACKAGE_VERSION} not found")
