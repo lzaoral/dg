@@ -193,19 +193,29 @@ else()
 	message(STATUS "Will NOT build fuzzing tests (available only with Clang 6 or newer)")
 endif()
 
-# explicitly add -std=c++11 (-std=c++14) and -fno-rtti
-# we have CMAKE_CXX_STANDARD, but for some reason it does not
-# put the -std=c++11 (-std=c++14) or -std=gnu++11 (-std=gnu++14)
-# to the flags on some systems.
-# For the -fno-rtti: LLVM still got problems with turning RTTI off...
-if (USE_CXX14)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+if (MSVC)
+    # MSVC eqivalents of -Wall -Wextra -fno-rtti
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /GR-")
+    if (NO_EXCEPTIONS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+    endif()
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -Wall -Wextra")
-if (NO_EXCEPTIONS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+    # GCC and Clang
+
+    # explicitly add -std=c++11 (-std=c++14) and -fno-rtti
+    # we have CMAKE_CXX_STANDARD, but for some reason it does not
+    # put the -std=c++11 (-std=c++14) or -std=gnu++11 (-std=gnu++14)
+    # to the flags on some systems.
+    # For the -fno-rtti: LLVM still got problems with turning RTTI off...
+    if (USE_CXX14)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -Wall -Wextra")
+    if (NO_EXCEPTIONS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+    endif()
 endif()
 
 if (USE_SANITIZERS)
