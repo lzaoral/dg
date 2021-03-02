@@ -1,0 +1,48 @@
+---
+name: Windows CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Windows
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [Debug, RelWithDebInfo]
+
+    # MSVC is not supported by ccache at the moment
+    # PR: ccache/ccache#506
+
+    runs-on: windows-latest
+    steps:
+      - name: Checkout DG
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          choco install 7zip
+
+          # LLVM
+          (New-Object System.Net.WebClient).DownloadFile(
+            "https://github.com/mun-lang/llvm-package-windows/releases/download/v11.0.1/llvm-11.0.1-windows-x64-msvc16.7z",
+            "llvm.7z"
+          )
+          & "C:\Program Files\7-Zip\7z.exe" x .\llvm.7z "-o.\_llvm"
+
+      - name: Configure CMake project
+        run: |
+          $LLVM_CMAKE_DIR = (.\_llvm\bin\llvm-config.exe "--cmakedir")
+
+          # sanitizers are probably not available on windows
+          cmake -S. `
+                -B_build `
+                -G"Visual Studio 16 2019" `
+                -DCMAKE_BUILD_TYPE:STRING=${{matrix.build}} `
+                -DUSE_SANITIZERS:BOOL=ON `
+                -DLLVM_DIR:PATH="$($LLVM_CMAKE_DIR)"
+
+      - name: Build
+        run: cmake --build _build
+
+      - name: Run tests
+        run: cmake --build _build --target check
